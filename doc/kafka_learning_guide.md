@@ -65,6 +65,17 @@ It is common to confuse **Events** and **Topics**, but they represent two differ
 | **Topic** | The **logical category, folder, or channel** where messages are sent and stored. It is a durable append-only log of events. | `user-signups` *(The channel where all signup events are routed)* | A mailbox, a folder on disk, or a database table. |
 | **Event** | An **individual immutable message** containing a fact—a statement about something that has already happened in the real world. | `USER_SIGNED_UP` *(The message containing the new user's details)* | A specific letter, a file inside a folder, or a row in a table. |
 
+#### 🚗 Famous Real-World Example: Uber Rides
+
+To see how scale companies design this, look at **Uber**:
+* **Topic**: `ride-lifecycle` (The stream/channel for coordinating a single trip).
+* **Events**: Milestones that represent historical facts occurring sequentially:
+  1. `RideRequested`: Triggered when the rider requests a ride.
+  2. `DriverAssigned`: Triggered when a driver accepts the trip.
+  3. `DriverArrived`: Triggered when the driver reaches the pickup spot.
+  4. `RideStarted`: Triggered when the passenger enters the car and the ride begins.
+  5. `RideCompleted`: Triggered when the driver drops off the passenger.
+
 #### Real-world Walkthrough: User Creation Feature
 
 When a new user registers on the platform, the following sequence occurs:
@@ -86,6 +97,51 @@ When a new user registers on the platform, the following sequence occurs:
      ```
 3. **The Topic Routes it:** This event is sent to the topic named `user-signups`.
 4. **The Consumers Read it:** Consumer groups (like `email-service-group` and `analytics-service-group`) subscribe to the `user-signups` **topic** to read, deserialize, and process each individual **event** independently.
+
+#### 🔄 Can a single Topic have more than one type of Event?
+**Yes, absolutely!** In production-grade Event-Driven Architectures, grouping multiple related event types within a single topic is a common, powerful design pattern known as the **Domain-Boundary Topic** or **Multi-Event Topic** pattern.
+
+Instead of creating separate topics for every single step of user registration, we can route all related events through our `user-signups` (or a broader `user-lifecycle`) topic.
+
+##### The Multi-Event Flow Scenario
+During user registration, the system might produce a series of distinct events:
+1. `USER_SIGNED_UP`: Triggered when the user submits their registration details.
+2. `OTP_GENERATED`: Triggered when a one-time verification password is created.
+3. `OTP_VERIFIED`: Triggered when the user successfully verifies their account.
+4. `ONBOARDING_COMPLETED`: Triggered when the user finishes setting up their profile metrics.
+
+```mermaid
+graph LR
+    subgraph Event Producer: User Service
+        E1["USER_SIGNED_UP"]
+        E2["OTP_GENERATED"]
+        E3["OTP_VERIFIED"]
+    end
+
+    Topic["Topic: user-signups (Key: user_123)"]
+
+    subgraph Consumer: Email/SMS Service
+        C_Email["Email Consumer<br/>- Sends Welcome Email on USER_SIGNED_UP<br/>- Sends SMS/Email OTP on OTP_GENERATED"]
+    end
+
+    subgraph Consumer: Analytics Service
+        C_Analytics["Analytics Consumer<br/>- Logs signup metrics on USER_SIGNED_UP<br/>- Tracks user completion rate on OTP_VERIFIED"]
+    end
+
+    E1 -->|Publish| Topic
+    E2 -->|Publish| Topic
+    E3 -->|Publish| Topic
+    
+    Topic -->|Read All| C_Email
+    Topic -->|Read All| C_Analytics
+    
+    style Topic fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+```
+
+##### Why use a Single Topic for multiple events?
+1. **Strict Ordering Guarantees**: Kafka only guarantees message ordering *within a single partition of a topic*. If you put `USER_SIGNED_UP` in one topic and `OTP_VERIFIED` in another, a consumer group could read the verification event *before* the signup event if one consumer group falls behind. By sending both events to `user-signups` with the same partition key (like `userId`), you guarantee they are processed in the exact order they occurred.
+2. **Lower Broker Overhead**: Every topic and partition in a Kafka cluster requires metadata management, file descriptors, and CPU cycles on the brokers. Grouping lifecycle events into a single domain-boundary topic reduces cluster resource usage compared to creating dozens of single-event topics.
+3. **Consumer Flexibility**: Consumers subscribe to the topic once, inspect the `"event"` field in the payload, and use a `switch` statement or router to selectively handle only the events they care about.
 
 ---
 
@@ -190,6 +246,14 @@ What happens if a follower is offline, slow, or falls behind?
   * The follower **truncates** its local log down to that High Watermark (throwing away any uncommitted messages that weren't fully replicated before the crash).
   * The follower then pulls messages from the leader starting from that point until it catches up and is welcomed back into the ISR.
   * If the **Leader crashes**, the controller quorum elects a new leader from the ISR. All remaining followers immediately truncate their logs to match the new leader's history, preventing mismatched order or duplicate offsets.
+
+#### 🎬 Famous Real-World Example: Netflix Video Playback Tracking
+
+To guarantee fault tolerance under massive load, look at **Netflix**:
+* When you watch a movie, your device periodically publishes a playback offset event (e.g., `"movie_id": 402, "paused_at_seconds": 1202`) to a tracking partition on Broker 1 (the Leader).
+* This event is continuously replicated to Broker 2 and Broker 3 (the Followers in the ISR).
+* If Broker 1 experiences a hardware crash, the Kafka controller immediately elects Broker 2 as the new Leader.
+* Because the playback event had been replicated to Broker 2 before the crash (the High Watermark was advanced), your video does not stutter, and when you resume on another device, you do not lose your spot.
 
 ---
 
@@ -628,6 +692,15 @@ const produceMessage = async (topic, message, key = null) => {
   });
 };
 ```
+
+#### 🛒 Famous Real-World Example: Amazon Order Processing
+
+At **Amazon**, when a customer purchases an item, pays for it, and then requests a return, these operations must happen sequentially:
+1. `ORDER_PLACED`
+2. `PAYMENT_PROCESSED`
+3. `RETURN_REQUESTED`
+
+If these events are published without a partition key, they will be distributed across partitions. A consumer processing the returns partition might read `RETURN_REQUESTED` before the consumer processing payments reads `PAYMENT_PROCESSED`, creating database logic errors. By keying all events with the `orderId`, Kafka ensures they all land on the same partition and are processed in the correct order.
 
 ---
 
