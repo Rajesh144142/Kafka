@@ -1,9 +1,6 @@
-# Tasks - Kafka Integration Refactor
-
-- [x] Refactor Kafka configuration client & producer: [kafka.js](file:///d:/kafka-demo/src/config/kafka.js)
-- [x] Refactor Kafka producer service: [producer.js](file:///d:/kafka-demo/src/kafka/producer.js)
-- [x] Refactor Kafka consumer utility: [consumer.js](file:///d:/kafka-demo/src/kafka/consumer.js)
-- [x] Refactor analytics consumer service: [analytics.consumer.js](file:///d:/kafka-demo/src/services/analytics.consumer.js)
-- [x] Refactor email consumer service: [email.consumer.js](file:///d:/kafka-demo/src/services/email.consumer.js)
-- [x] Update server entrypoint to start consumers and handle shutdown: [server.js](file:///d:/kafka-demo/src/server.js)
-- [x] Verify the implementation (Docker compose, logs, endpoint request)
+- [x] Add USER_SIGNUPS_DLQ to topic.js files and register the topic in config/kafka.js
+- [x] Implement user-signups-dlq creation logic in user-service initKafka
+- [x] Create services/notification-service microservice (copy config, build consumer and worker)
+- [x] Add DLQ producer and logic inside payment-service to publish parsing failures
+- [x] Update root package.json scripts to start all 3 services concurrently
+- [/] Verify functionality (standard signup notification, DLQ redirect for invalid email)
