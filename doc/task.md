@@ -1,6 +1,0 @@
-- [x] Add USER_SIGNUPS_DLQ to topic.js files and register the topic in config/kafka.js
-- [x] Implement user-signups-dlq creation logic in user-service initKafka
-- [x] Create services/notification-service microservice (copy config, build consumer and worker)
-- [x] Add DLQ producer and logic inside payment-service to publish parsing failures
-- [x] Update root package.json scripts to start all 3 services concurrently
-- [/] Verify functionality (standard signup notification, DLQ redirect for invalid email)

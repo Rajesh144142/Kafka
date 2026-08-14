@@ -14,7 +14,5 @@ exports.createRolePermissionsTable = `
   );
 `;
 
-exports.insertPermission = 'INSERT INTO permissions (name, description) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *';
+exports.insertPermission = 'INSERT INTO permissions (name, description) VALUES ($1, $2) RETURNING *';
 exports.assignPermissionToRole = 'INSERT INTO role_permissions (role_id, permission_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *';
-exports.findPermissionByName = 'SELECT * FROM permissions WHERE name = $1';
-exports.deleteRolePermissions = 'DELETE FROM role_permissions WHERE role_id = $1';

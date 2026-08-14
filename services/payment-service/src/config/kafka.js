@@ -1,18 +1,7 @@
-const { Kafka, Partitioners } = require('kafkajs');
+const { createKafkaClient } = require('../../../../shared/kafka/kafka');
+const { USER_SIGNUPS, ROLE_ASSIGNMENTS, AUDIT_LOGS, USER_SIGNUPS_DLQ, PAYMENT_EVENTS } = require('../../../../shared/kafka/topic');
 
-process.env.KAFKAJS_NO_PARTITIONER_WARNING = '1';
-
-const kafka = new Kafka({
-  clientId: 'kafka-learning',
-  brokers: process.env.KAFKA_BROKERS.split(','),
-  createPartitioner: Partitioners.LegacyPartitioner,
-  retry: {
-    retries: 10,
-    initialRetryTime: 300,
-    factor: 0.2,
-  },
-});
-
+const kafka = createKafkaClient('payment-service');
 const producer = kafka.producer();
 
 const initKafka = async () => {
@@ -24,17 +13,27 @@ const initKafka = async () => {
       waitForLeaders: true,
       topics: [
         {
-          topic: 'user-signups',
+          topic: USER_SIGNUPS,
           numPartitions: 3,
           replicationFactor: 1,
         },
         {
-          topic: 'role-assignments',
+          topic: ROLE_ASSIGNMENTS,
           numPartitions: 3,
           replicationFactor: 1,
         },
         {
-          topic: 'audit-logs',
+          topic: AUDIT_LOGS,
+          numPartitions: 3,
+          replicationFactor: 1,
+        },
+        {
+          topic: USER_SIGNUPS_DLQ,
+          numPartitions: 3,
+          replicationFactor: 1,
+        },
+        {
+          topic: PAYMENT_EVENTS,
           numPartitions: 3,
           replicationFactor: 1,
         },

@@ -10,3 +10,8 @@ exports.findAll = async () => {
   const result = await db.query(userQueries.selectAllUsers);
   return result.rows;
 };
+
+exports.findAllWithRoles = async () => {
+  const result = await db.query(userQueries.selectAllUsersWithRoles);
+  return result.rows;
+};

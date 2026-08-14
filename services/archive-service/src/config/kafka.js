@@ -1,4 +1,4 @@
 const { createKafkaClient } = require('../../../../shared/kafka/kafka');
-const kafka = createKafkaClient('notification-service');
+const kafka = createKafkaClient('archive-service');
 
 module.exports = { kafka };

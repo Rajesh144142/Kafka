@@ -8,11 +8,3 @@ exports.createUsersTable = `
 
 exports.insertUser = 'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *';
 exports.selectAllUsers = 'SELECT * FROM users';
-exports.selectAllUsersWithRoles = `
-  SELECT u.id, u.name, u.email, array_remove(array_agg(r.name), NULL) as roles
-  FROM users u
-  LEFT JOIN user_roles ur ON u.id = ur.user_id
-  LEFT JOIN roles r ON ur.role_id = r.id
-  GROUP BY u.id
-  ORDER BY u.id ASC
-`;

@@ -1,9 +1,7 @@
-const { kafka } = require('../config/kafka');
-
 const activeConsumers = [];
 
-const runConsumer = async ({ topic, groupId, onMessage }) => {
-  const consumer = kafka.consumer({ groupId });
+const runConsumer = async (kafkaClient, { topic, groupId, onMessage }) => {
+  const consumer = kafkaClient.consumer({ groupId });
   
   await consumer.connect();
   await consumer.subscribe({ topic, fromBeginning: true });

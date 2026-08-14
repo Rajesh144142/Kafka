@@ -3,36 +3,32 @@ require('dotenv').config();
 const express = require('express');
 const db = require('./config/database');
 const { shutdownConsumers } = require('../../../shared/kafka/consumer');
-const { 
-  initNotificationConsumer,
-  initPaymentNotificationConsumer
-} = require('./services/notification.consumer');
+const { initArchiveConsumer } = require('./services/archive.consumer');
 
-const PORT = parseInt(process.env.PORT, 10) || 3002;
+const PORT = parseInt(process.env.PORT, 10) || 3003;
 
 const start = async () => {
-  console.log('👷 Starting Notification background workers...');
+  console.log('👷 Starting Archive background workers...');
   
   // 1. Initialize database and schemas
   await db.initDb();
 
   // 2. Start consumer groups
-  await initNotificationConsumer();
-  await initPaymentNotificationConsumer();
+  await initArchiveConsumer();
 
   // 3. Start HTTP Express Server (Health Check)
   const app = express();
   app.get('/health', (req, res) => {
-    res.json({ status: 'UP', service: 'notification-service' });
+    res.json({ status: 'UP', service: 'archive-service' });
   });
   app.get('/', (req, res) => {
-    res.send('Notification Service (Kafka Consumer)');
+    res.send('Archive Service (Kafka Consumer + S3 Archiver)');
   });
   const server = app.listen(PORT, () => {
     console.log(`🚀 HTTP Server running on http://localhost:${PORT}`);
   });
 
-  console.log('🚀 Notification workers are online and running.');
+  console.log('🚀 Archive workers are online and running.');
 
   // 4. Graceful Shutdown handlers
   const handleShutdown = async (signal) => {
@@ -53,6 +49,6 @@ const start = async () => {
 };
 
 start().catch((error) => {
-  console.error('❌ Failed to start Notification workers:', error);
+  console.error('❌ Failed to start Archive workers:', error);
   process.exit(1);
 });

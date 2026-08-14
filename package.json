@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:user\" \"npm run dev:payment\" \"npm run dev:notification\"",
+    "dev": "concurrently \"npm run dev:user\" \"npm run dev:payment\" \"npm run dev:notification\" \"npm run dev:archive\"",
     "dev:user": "npm run dev --prefix services/user-service",
     "dev:payment": "npm run dev --prefix services/payment-service",
-    "dev:notification": "npm run dev --prefix services/notification-service"
+    "dev:notification": "npm run dev --prefix services/notification-service",
+    "dev:archive": "npm run dev --prefix services/archive-service"
   },
   "keywords": [],
   "author": "",

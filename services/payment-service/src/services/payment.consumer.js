@@ -1,10 +1,10 @@
-const { runConsumer } = require('../kafka/consumer');
-const { USER_SIGNUPS, USER_SIGNUPS_DLQ } = require('../kafka/topic');
-const { producer } = require('../config/kafka');
+const { runConsumer } = require('../../../../shared/kafka/consumer');
+const { USER_SIGNUPS, USER_SIGNUPS_DLQ } = require('../../../../shared/kafka/topic');
+const { kafka, producer } = require('../config/kafka');
 
 const initPaymentConsumer = async () => {
   console.log('💳 Payment consumer is starting...');
-  await runConsumer({
+  await runConsumer(kafka, {
     topic: USER_SIGNUPS,
     groupId: 'payment-service-group',
     onMessage: async (messageStr, key) => {

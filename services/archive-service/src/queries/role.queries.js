@@ -14,7 +14,5 @@ exports.createUserRolesTable = `
   );
 `;
 
-exports.insertRole = 'INSERT INTO roles (name, description) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET description = EXCLUDED.description RETURNING *';
+exports.insertRole = 'INSERT INTO roles (name, description) VALUES ($1, $2) RETURNING *';
 exports.assignRoleToUser = 'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *';
-exports.findRoleByName = 'SELECT * FROM roles WHERE name = $1';
-exports.deleteUserRoles = 'DELETE FROM user_roles WHERE user_id = $1';

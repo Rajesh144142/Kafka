@@ -1,5 +1,5 @@
 {
-  "name": "payment-service",
+  "name": "archive-service",
   "version": "1.0.0",
   "main": "src/worker.js",
   "scripts": {
